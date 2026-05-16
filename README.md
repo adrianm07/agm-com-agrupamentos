@@ -74,18 +74,6 @@ grafos/
     ├── Grafo.cpp         # Implementação de Grafo
     └── main.cpp          # Ponto de entrada
 ```
-
----
-
-
-Exemplo de uso no código:
-
-```cpp
-Grafo g(false, false); // não orientado, não ponderado
-g.lerArquivo("grafo.txt");
-g.imprimirGrafo();
-```
-
 ---
 
 ## Recompilar após mudanças no código
