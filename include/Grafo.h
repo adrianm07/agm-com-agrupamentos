@@ -16,7 +16,9 @@ public:
     void alterarPesoAresta(int origem, int destino, double peso);
     void imprimirGrafo();
     void lerArquivo(const string& nomeArquivo);
-    
+    int getGrau(int id);
+    vector<Aresta> listarArestas(int id);
+    vector<int> listarVizinhos(int id);
 
 private:
     bool orientado;  

@@ -11,6 +11,7 @@ set(SOURCE_FILES
     src/Vertice.cpp
     src/Aresta.cpp
     src/Grafo.cpp
+    src/GrafoTests.cpp
     src/main.cpp
 )
 

@@ -65,3 +65,7 @@ bool Vertice::temArestaPara(Vertice *v) {
     }
     return false;
 }
+
+vector<Aresta> Vertice::getArestas() {
+    return arestas;
+}

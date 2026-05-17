@@ -12,8 +12,8 @@ Grafo::Grafo(bool orientado, bool ponderado) {
 
 
 Grafo::~Grafo() {
-   for(int i =0; i<vertices.size(); i++){
-    delete vertices[i];
+   for(auto& par : vertices) {
+    delete par.second;
    }
 }
 
@@ -121,4 +121,36 @@ void Grafo::lerArquivo(const string& nomeArquivo) {
         }
     }
     arquivo.close();
-}
+}
+
+
+int Grafo::getGrau(int id) {
+    if (vertices.find(id) != vertices.end()) {
+        return vertices[id]->getGrau();
+    }
+
+    return -1; 
+}
+
+vector<Aresta> Grafo::listarArestas(int id) {
+    if (vertices.find(id) != vertices.end()) {
+        return vertices[id]->getArestas();
+    }
+
+    return vector<Aresta>(); 
+}
+
+vector<int> Grafo::listarVizinhos(int id) {
+    vector<int> vizinhos;
+
+    if (vertices.find(id) != vertices.end()) {
+        Vertice* v = vertices[id];
+
+        for (int i = 0; i < v->getGrau(); i++) {
+            Vertice* adj = v->getAdjacente(i);
+            vizinhos.push_back(adj->getId());
+        }
+    }
+
+    return vizinhos;
+}

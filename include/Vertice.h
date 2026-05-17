@@ -19,7 +19,7 @@ public:
     Vertice *getAdjacente(int pos);
     int getGrau();
     int getId();
-    
+    vector<Aresta> getArestas();
 
 private:
     int id;

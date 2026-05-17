@@ -63,15 +63,17 @@ cmake --build build
 
 ```
 grafos/
-├── CMakeLists.txt       # Configuração de build
+├── CMakeLists.txt        # Configuração de build
 ├── include/
-│   ├── Aresta.h         # Declaração da classe Aresta
-│   ├── Vertice.h        # Declaração da classe Vertice
-│   └── Grafo.h          # Declaração da classe Grafo
+│   ├── Aresta.h          # Declaração da classe Aresta
+│   ├── Vertice.h         # Declaração da classe Vertice
+│   ├── Grafo.h           # Declaração da classe Grafo
+│   └── GrafoTests.h      # Declaração da classe GrafoTests
 └── src/
     ├── Aresta.cpp        # Implementação de Aresta
     ├── Vertice.cpp       # Implementação de Vertice
     ├── Grafo.cpp         # Implementação de Grafo
+    ├── GrafoTests.cpp    # Implementação de GrafoTests
     └── main.cpp          # Ponto de entrada
 ```
 ---
