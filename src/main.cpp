@@ -1,8 +1,9 @@
 #include <iostream>
+#include "GrafoTests.h"
 using namespace std;
 
 int main()
 {
-    cout << "Hello World!" << endl;
-    return 0;
+    GrafoTests testes;
+    testes.testAll();
 }

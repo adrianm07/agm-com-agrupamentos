@@ -5,6 +5,7 @@ class GrafoTests {
 public:
   static void testAll();
 
+
 private:
   static void testAdicionarVertice();
   static void testRemoverVertice();
@@ -27,6 +28,10 @@ private:
 
   static void testVerificarAdjacencia();
   static void testVerificarAdjacenciaOrientada();
+
+  static void testPrimAGM();
+
+
 };
 
 #endif

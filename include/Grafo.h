@@ -19,6 +19,7 @@ public:
     int getGrau(int id);
     vector<Aresta> listarArestas(int id);
     vector<int> listarVizinhos(int id);
+    Grafo* primAGM(double *custo);
 
 private:
     bool orientado;  

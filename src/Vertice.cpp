@@ -14,6 +14,10 @@ int Vertice::getId() {
     return id;
 }
 
+void Vertice::setVisitado(bool visitado) {
+    this->visitado = visitado;
+}
+
 bool Vertice::getVisitado() {
     return visitado;
 }

@@ -24,6 +24,8 @@ void GrafoTests::testAll() {
     testListarVizinhos();
     
     testImprimirGrafo();
+
+    testPrimAGM();
 }
 
 void GrafoTests::testAdicionarVertice() {
@@ -482,4 +484,35 @@ void GrafoTests::testVerificarAdjacenciaOrientada() {
 
     cout << "OK Adjacencia em grafo orientado verificada com sucesso!" << endl;
     cout << "----------------------" << endl;
+}
+
+void GrafoTests::testPrimAGM() {
+
+    Grafo grafo(false, true); // Grafo ponderado
+
+    cout << "\n------------------------------\n";
+    cout << "TESTE: ALGORITMO DE PRIM (AGM)\n";
+    cout << "ESTADO inicial: Grafo ponderado com 4 vertices e potencial ciclo\n";
+    cout << "ACAO: Executar o algoritmo de Prim\n";
+    cout << "ESPERADO: AGM com custo total = 8 e apenas 3 arestas validas\n";
+    cout << "------------------------------\n";
+
+    grafo.addAresta(1, 2, 4);
+    grafo.addAresta(1, 3, 1);
+    grafo.addAresta(2, 3, 2);
+    grafo.addAresta(3, 4, 5);
+
+    double custo;
+    Grafo* agm = grafo.primAGM(&custo);
+
+    assert(agm != nullptr);
+    assert(custo == 8);
+    
+    agm->imprimirGrafo();
+
+    cout << "OK AGM gerada com sucesso!" << endl;
+    cout << "----------------------" << endl;
+
+    delete agm;
+
 }

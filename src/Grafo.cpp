@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <queue>
 using namespace std;
 
 Grafo::Grafo(bool orientado, bool ponderado) {
@@ -153,4 +154,90 @@ vector<int> Grafo::listarVizinhos(int id) {
     }
 
     return vizinhos;
+}
+
+// Estrutura auxiliar para a fila de arestas ja que a aresta.cpp não contem a origem
+//Ficaria inviável implementar sem isso pois na fila, eu não saberia de onde pra onde a aresta vai
+struct ArestaAux {
+    int origem;
+    int destino;
+    double peso;
+
+    bool operator>(const ArestaAux& outra) const {
+        return (peso > outra.peso);
+    }
+};
+
+Grafo* Grafo::primAGM(double* custo) {
+
+    if(!ponderado){
+        cerr << "Erro: O algoritmo exige um grafo ponderado" << endl;
+        return nullptr;
+    }
+
+    if(vertices.empty()){
+        cerr << "Erro: O grafo está vazio" << endl;
+        return nullptr;
+    }
+
+    for(auto& par : vertices){
+        par.second->setVisitado(false); // seta todos os vertice como não visitados antes de iniciar a execução
+    }
+
+    Grafo* agm = new Grafo(false, true); // cria um grafo nao orientado e ponderado
+
+    priority_queue<ArestaAux, vector<ArestaAux>, greater<ArestaAux>> filaPrioridade; // cria uma fila de ArestaAux e que é um Min-Heap(usando o greater e o operator>)
+
+    Vertice* vInicial = vertices.begin()->second; // define o vertice inicial como o primeiro vertice do mapa
+    int idInicial = vInicial->getId();
+
+    vInicial->setVisitado(true); // marca ele como visitado
+    agm->addVertice(idInicial); // e adiciona ele na árvore
+ 
+    for(Aresta& aresta : vInicial->getArestas()){
+        filaPrioridade.push({idInicial, aresta.getDestino()->getId(), aresta.getPeso()}); // adiciona as arestas do vértice inicial na fila
+    }
+
+    double custoTotal = 0;
+    int arestasAdicionadas = 0;
+
+    while(!filaPrioridade.empty() && arestasAdicionadas < numVertices - 1){ // repete enquanto a fila não estiver vazia ou enquanto nao satisfizer o limite de arestas da arvore
+
+        ArestaAux arestaAtual = filaPrioridade.top(); // pega a do topo da heap
+        filaPrioridade.pop(); // remove a aresta do topo da heap
+
+        int origem = arestaAtual.origem;
+        int destino = arestaAtual.destino;
+        double peso = arestaAtual.peso;
+
+        Vertice* vDestino = vertices[destino];
+
+        if(vDestino->getVisitado()){ // verifico se a menor aresta é ligada a um nó ja vistado(evitando ciclos)
+            continue; // se sim, proxima iteração
+        }
+        // se não, adiciono a aresta na arvore
+        vDestino->setVisitado(true);
+        agm->addAresta(origem, destino, peso);
+        custoTotal += peso;
+        arestasAdicionadas++;
+
+        for(Aresta& aresta : vDestino->getArestas()){ // pra cada aresta do proximo nó, adiciona na fila e o processo continua
+            if(!aresta.getDestino()->getVisitado()){
+                filaPrioridade.push({destino, aresta.getDestino()->getId(), aresta.getPeso()});
+            }
+        }
+
+    }
+
+    if(arestasAdicionadas < numVertices - 1){
+        cout << "Aviso: O grafo é desconexo." << endl;
+    }
+
+    if(custo != nullptr){
+        *custo = custoTotal;
+    }
+    cout << "--- Execucao do Algoritmo de Prim-AGM ---" << endl;
+    cout << "Custo total: " << custoTotal << endl;
+
+    return agm;
 }
