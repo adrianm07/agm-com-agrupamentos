@@ -11,7 +11,6 @@ Grafo::Grafo(bool orientado, bool ponderado) {
     this->numVertices = 0;
 }
 
-
 Grafo::~Grafo() {
    for(auto& par : vertices) {
     delete par.second;
@@ -110,18 +109,31 @@ void Grafo::lerArquivo(const string& nomeArquivo) {
         int origem, destino;
         double peso = 1.0;
 
-        if (ss >> origem) {
-            if (ss >> destino) {
-                if (ponderado) {
-                    ss >> peso;
+        if(ss >> origem >> destino) {
+            if (ponderado) {
+                if(!(ss >> peso)) {
+                    cerr << "Erro: Peso da aresta nao especificado" << endl;
+                    continue;
                 }
-                addAresta(origem, destino, peso);
-            } else {
+            }
+
+            addVertice(origem);
+            addVertice(destino);
+
+            addAresta(origem, destino, peso);
+
+        } else {
+            ss.clear();
+            ss.str(linha);
+
+            if(ss >> origem) {
                 addVertice(origem);
             }
         }
     }
+
     arquivo.close();
+    cout << "Arquivo importado com sucesso!" << endl;
 }
 
 
