@@ -52,7 +52,6 @@ void Menu::iniciar() {
 void Menu::menuInterativo() {
 
     bool orientado;
-    bool ponderado;
 
     bool importar = false;
 
@@ -64,13 +63,6 @@ void Menu::menuInterativo() {
 
     cin >> orientado;
 
-    cout << "\nO grafo sera ponderado?\n";
-    cout << "0 - Nao\n";
-    cout << "1 - Sim\n";
-    cout << "Opcao: ";
-
-    cin >> ponderado;
-
     cout << "\nO arquivo sera importado?\n";
     cout << "0 - Nao\n";
     cout << "1 - Sim\n";
@@ -78,7 +70,7 @@ void Menu::menuInterativo() {
 
     cin >> importar;
 
-    Grafo grafo(orientado, ponderado);
+    Grafo grafo(orientado);
 
     if(importar){
         cout << "\nDigite o caminho do arquivo: ";
@@ -133,10 +125,8 @@ void Menu::menuInterativo() {
                 cout << "Destino: ";
                 cin >> destino;
 
-                if (ponderado) {
-                    cout << "Peso: ";
-                    cin >> peso;
-                }
+                cout << "Peso (opcional, digite 1.0 se nao for ponderado): ";
+                cin >> peso;
 
                 grafo.addAresta(origem, destino, peso);
 

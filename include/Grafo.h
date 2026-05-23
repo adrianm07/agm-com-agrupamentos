@@ -6,7 +6,7 @@ using namespace std;
 
 class Grafo {
 public:
-    Grafo(bool orientado, bool ponderado);
+    Grafo(bool orientado);
     ~Grafo();
     void addVertice(int id);
     void removeVertice(int id);
@@ -20,10 +20,10 @@ public:
     vector<Aresta> listarArestas(int id);
     vector<int> listarVizinhos(int id);
     Grafo* primAGM(double *custo);
+    bool isPonderado();
 
 private:
     bool orientado;  
-    bool ponderado;  
     unordered_map<int, Vertice*> vertices; 
     int numVertices;
 };

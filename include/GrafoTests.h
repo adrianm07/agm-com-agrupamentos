@@ -16,7 +16,7 @@ private:
 
   public:
     GrafoWrapper(bool orientado) {
-        grafo = new Grafo(orientado, true);
+        grafo = new Grafo(orientado);
     }
 
     ~GrafoWrapper() {
