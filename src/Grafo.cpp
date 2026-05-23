@@ -3,12 +3,25 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
+#include <stdexcept>
+#include <iomanip>
 using namespace std;
 
-Grafo::Grafo(bool orientado, bool ponderado) {
+Grafo::Grafo(bool orientado) {
     this->orientado = orientado;
-    this->ponderado = ponderado;
     this->numVertices = 0;
+    cout<< fixed << setprecision(1); 
+}
+
+bool Grafo::isPonderado() {
+    for (auto& par : vertices) {
+        for (Aresta& aresta : par.second->getArestas()) {
+            if (aresta.getPeso() != 1.0) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 Grafo::~Grafo() {
@@ -38,6 +51,10 @@ void Grafo::removeVertice(int id) {
     numVertices--;
 }
 void Grafo::addAresta(int origem, int destino, double peso) {
+    if (verificarAdjacencia(origem, destino)) {
+        return; 
+    }
+
     addVertice(origem);
     addVertice(destino);
     Vertice* vOrigem = vertices[origem];
@@ -76,19 +93,13 @@ void Grafo::alterarPesoAresta(int origem, int destino, double peso) {
 
 
 void Grafo::imprimirGrafo() {
-    cout << "--- Representacao do Grafo ---" << endl;
+    cout << numVertices << endl;
     for (auto& par : vertices) {
         Vertice* v = par.second;
-        cout << "No " << v->getId() << " -> ";
-        if (v->getGrau() == 0) {
-            cout << "(isolado)";
-        } else {
-            for (int i = 0; i < v->getGrau(); i++) {
-                Vertice* adj = v->getAdjacente(i);
-                cout << "[" << adj->getId() << "] ";
-            }
+        for (Aresta& a : v->getArestas()) {
+            if (!orientado && v->getId() > a.getDestino()->getId()) continue;
+            cout << v->getId() << " " << a.getDestino()->getId() << " " << a.getPeso() << endl;
         }
-        cout << endl;
     }
 }
 
@@ -98,8 +109,7 @@ void Grafo::lerArquivo(const string& nomeArquivo) {
     string linha;
 
     if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo: " << nomeArquivo << endl;
-        return;
+        throw std::runtime_error("Erro ao abrir o arquivo: " + nomeArquivo);
     }
 
     while (getline(arquivo, linha)) {
@@ -110,11 +120,8 @@ void Grafo::lerArquivo(const string& nomeArquivo) {
         double peso = 1.0;
 
         if(ss >> origem >> destino) {
-            if (ponderado) {
-                if(!(ss >> peso)) {
-                    cerr << "Erro: Peso da aresta nao especificado" << endl;
-                    continue;
-                }
+            if(!(ss >> peso)) {
+                peso = 1.0;
             }
 
             addVertice(origem);
@@ -183,25 +190,22 @@ struct ArestaAux {
 Grafo* Grafo::primAGM(double* custo) {
 
     if(orientado){
-        cerr << "Erro: O algoritmo exige um grafo nao orientado" << endl;
-        return nullptr;
+        throw std::invalid_argument("Erro: O algoritmo exige um grafo nao orientado");
     }
 
-    if(!ponderado){
-        cerr << "Erro: O algoritmo exige um grafo ponderado" << endl;
-        return nullptr;
+    if(!isPonderado()){
+        throw std::invalid_argument("Erro: O algoritmo exige um grafo ponderado");
     }
 
     if(vertices.empty()){
-        cerr << "Erro: O grafo está vazio" << endl;
-        return nullptr;
+        throw std::runtime_error("Erro: O grafo esta vazio");
     }
 
     for(auto& par : vertices){
         par.second->setVisitado(false); // seta todos os vertice como não visitados antes de iniciar a execução
     }
 
-    Grafo* agm = new Grafo(false, true); // cria um grafo nao orientado e ponderado
+    Grafo* agm = new Grafo(false); // cria um grafo nao orientado
 
     priority_queue<ArestaAux, vector<ArestaAux>, greater<ArestaAux>> filaPrioridade; // cria uma fila de ArestaAux e que é um Min-Heap(usando o greater e o operator>)
 
