@@ -1,7 +1,7 @@
 #ifndef GRAFO_H
 #define GRAFO_H
 #include "Vertice.h"
-#include <unordered_map>
+#include <map>
 using namespace std;
 
 class Grafo {
@@ -24,7 +24,7 @@ public:
 
 private:
     bool orientado;  
-    unordered_map<int, Vertice*> vertices; 
+    map<int, Vertice*> vertices; 
     int numVertices;
 };
 

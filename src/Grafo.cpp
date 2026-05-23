@@ -4,11 +4,13 @@
 #include <sstream>
 #include <queue>
 #include <stdexcept>
+#include <iomanip>
 using namespace std;
 
 Grafo::Grafo(bool orientado) {
     this->orientado = orientado;
     this->numVertices = 0;
+    cout<< fixed << setprecision(1); 
 }
 
 bool Grafo::isPonderado() {
