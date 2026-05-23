@@ -240,7 +240,16 @@ void Menu::menuInterativo() {
 
                 break;
             }
+
             case 9: {
+                double custo;
+                Grafo* agm = grafo.primAGM(&custo);
+                cout << "Impressao AGM\n";
+                agm->imprimirGrafo();
+                break;
+            }
+
+            case 10: {
                 grafo.imprimirGrafo();
 
                 break;
@@ -271,7 +280,8 @@ void Menu::exibirMenu() {
     cout << "6 - Alterar peso da aresta\n";
     cout << "7 - Obter grau de um vertice\n";
     cout << "8 - Listar vizinhos\n";
-    cout << "9 - Exibir grafo\n";
+    cout << "9 - Algoritmo de Prim-AGM\n";
+    cout << "10 - Exibir grafo\n";
     cout << "0 - Voltar\n";
     cout << "=====================================\n";
     cout << "Escolha uma opcao: ";
