@@ -2,6 +2,15 @@
 
 Implementação de uma estrutura de grafos orientados/não orientados e ponderados/não ponderados em C++17, com suporte a leitura de grafos via arquivo.
 
+## Funcionalidades
+- **Manipulação de Vértices e Arestas**: Adicionar e remover vértices e arestas.
+- **Consultas**: Verificar adjacência, listar vizinhos, listar arestas e obter o grau do vértice.
+- **Tipos de Grafo**: Suporta grafos orientados e não orientados.
+- **Pesos**: Suporte a arestas com ou sem pesos (possibilidade de alterar os pesos).
+- **Algoritmos**: Árvore Geradora Mínima (Algoritmo de Prim - *Prim AGM*).
+- **Entrada de Arquivo**: Leitura de configurações do grafo a partir de arquivos `.txt`.
+- **Interface e Testes**: Menu interativo integrado, e testes pré-configurados (`GrafoTests`).
+
 ## Pré-requisitos
 
 ### Windows
@@ -64,17 +73,21 @@ cmake --build build
 ```
 grafos/
 ├── CMakeLists.txt        # Configuração de build
+├── data/
+│   └── arquivoExemplo.txt # Exemplo de arquivo de entrada para leitura do grafo
 ├── include/
 │   ├── Aresta.h          # Declaração da classe Aresta
-│   ├── Vertice.h         # Declaração da classe Vertice
 │   ├── Grafo.h           # Declaração da classe Grafo
-│   └── GrafoTests.h      # Declaração da classe GrafoTests
+│   ├── GrafoTests.h      # Declaração da classe GrafoTests
+│   ├── Menu.h            # Declaração da classe Menu
+│   └── Vertice.h         # Declaração da classe Vertice
 └── src/
     ├── Aresta.cpp        # Implementação de Aresta
-    ├── Vertice.cpp       # Implementação de Vertice
     ├── Grafo.cpp         # Implementação de Grafo
     ├── GrafoTests.cpp    # Implementação de GrafoTests
-    └── main.cpp          # Ponto de entrada
+    ├── main.cpp          # Ponto de entrada
+    ├── Menu.cpp          # Implementação de Menu
+    └── Vertice.cpp       # Implementação de Vertice
 ```
 ---
 
