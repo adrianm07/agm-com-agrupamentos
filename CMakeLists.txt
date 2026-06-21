@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include_directories(include)
 
 set(SOURCE_FILES
+    src/AGMGAlgoritmo.cpp
     src/Vertice.cpp
     src/Aresta.cpp
     src/Grafo.cpp

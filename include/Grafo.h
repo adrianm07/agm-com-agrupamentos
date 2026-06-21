@@ -24,9 +24,14 @@ public:
     vector<int> listarVizinhos(int id);
     Grafo* primAGM(double *custo);
     bool isPonderado();
+
     void addGrupo(int id);
     Grupo* getGrupo(int id);
     vector<Grupo*> getGrupos();
+    
+    map<int, Vertice*>& getVertices();
+    Vertice* getVertice(int id);
+    int getNumVertices();
 
 private:
     bool orientado;  

@@ -301,3 +301,21 @@ Grupo* Grafo::getGrupo(int id) {
 vector<Grupo*> Grafo::getGrupos() {
     return grupos;
 }
+
+map<int, Vertice*>& Grafo::getVertices() {
+    return vertices;
+}
+
+Vertice* Grafo::getVertice(int id) {
+    auto it = vertices.find(id);
+
+    if(it == vertices.end()) {
+        return nullptr;
+    }
+
+    return it->second;
+}
+
+int Grafo::getNumVertices() {
+    return numVertices;
+}

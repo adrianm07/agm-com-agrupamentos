@@ -76,6 +76,7 @@ agm-com-agrupamentos/
 ├── data/
 │   └── arquivoExemplo.txt # Exemplo de arquivo de entrada para leitura do grafo
 ├── include/
+│   ├── AGMGAlgoritmo.h   # Declaração da classe AGMGAlgoritmo
 │   ├── Aresta.h          # Declaração da classe Aresta
 │   ├── Grafo.h           # Declaração da classe Grafo
 │   ├── GrafoTests.h      # Declaração da classe GrafoTests
@@ -83,13 +84,14 @@ agm-com-agrupamentos/
 │   ├── Menu.h            # Declaração da classe Menu
 │   └── Vertice.h         # Declaração da classe Vertice
 └── src/
-    ├── Aresta.cpp        # Implementação de Aresta
-    ├── Grafo.cpp         # Implementação de Grafo
-    ├── GrafoTests.cpp    # Implementação de GrafoTests
-    ├── Grupo.cpp         # Implementação de Grupo
-    ├── main.cpp          # Ponto de entrada
-    ├── Menu.cpp          # Implementação de Menu
-    └── Vertice.cpp       # Implementação de Vertice
+    ├── AGMGAlgoritmo.cpp   # Implementação do algoritmo AGM
+    ├── Aresta.cpp          # Implementação de Aresta
+    ├── Grafo.cpp           # Implementação de Grafo
+    ├── GrafoTests.cpp      # Implementação de GrafoTests
+    ├── Grupo.cpp           # Implementação de Grupo
+    ├── main.cpp            # Ponto de entrada
+    ├── Menu.cpp            # Implementação de Menu
+    └── Vertice.cpp         # Implementação de Vertice
 ```
 ---
 
