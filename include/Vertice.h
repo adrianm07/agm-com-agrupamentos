@@ -20,9 +20,15 @@ public:
     int getGrau();
     int getId();
     vector<Aresta> getArestas();
+    int getGrupo();
+
+    void setGrupoId(int grupoId);
+    int getGrupoId();
 
 private:
     int id;
+    int grupoId;
+    
     vector<Aresta> arestas;
     //Para o prim e busca 
     bool visitado;

@@ -12,6 +12,7 @@ set(SOURCE_FILES
     src/Aresta.cpp
     src/Grafo.cpp
     src/GrafoTests.cpp
+    src/Grupo.cpp
     src/Menu.cpp
     src/main.cpp
 )

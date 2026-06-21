@@ -1,7 +1,10 @@
 #ifndef GRAFO_H
 #define GRAFO_H
 #include "Vertice.h"
+#include "Grupo.h"
 #include <map>
+#include <vector>
+
 using namespace std;
 
 class Grafo {
@@ -21,10 +24,14 @@ public:
     vector<int> listarVizinhos(int id);
     Grafo* primAGM(double *custo);
     bool isPonderado();
+    void addGrupo(int id);
+    Grupo* getGrupo(int id);
+    vector<Grupo*> getGrupos();
 
 private:
     bool orientado;  
     map<int, Vertice*> vertices; 
+    vector<Grupo*> grupos;
     int numVertices;
 };
 

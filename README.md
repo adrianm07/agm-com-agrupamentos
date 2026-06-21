@@ -38,7 +38,7 @@ sudo apt install cmake g++ build-essential
 
 ```powershell
 # 1. Clone o repositório (ou entre na pasta do projeto)
-cd caminho\para\grafos
+cd caminho\para\agm-com-agrupamentos
 
 # 2. Configure o projeto (somente na primeira vez ou ao mudar CMakeLists.txt)
 cmake -S . -B build -G "MinGW Makefiles"
@@ -54,7 +54,7 @@ cmake --build build
 
 ```bash
 # 1. Clone o repositório (ou entre na pasta do projeto)
-cd caminho/para/grafos
+cd caminho/para/agm-com-agrupamentos
 
 # 2. Configure o projeto (somente na primeira vez ou ao mudar CMakeLists.txt)
 cmake -S . -B build
@@ -71,7 +71,7 @@ cmake --build build
 ## Estrutura do projeto
 
 ```
-grafos/
+agm-com-agrupamentos/
 ├── CMakeLists.txt        # Configuração de build
 ├── data/
 │   └── arquivoExemplo.txt # Exemplo de arquivo de entrada para leitura do grafo
@@ -79,12 +79,14 @@ grafos/
 │   ├── Aresta.h          # Declaração da classe Aresta
 │   ├── Grafo.h           # Declaração da classe Grafo
 │   ├── GrafoTests.h      # Declaração da classe GrafoTests
+│   ├── Grupo.h           # Declaração da classe Grupo
 │   ├── Menu.h            # Declaração da classe Menu
 │   └── Vertice.h         # Declaração da classe Vertice
 └── src/
     ├── Aresta.cpp        # Implementação de Aresta
     ├── Grafo.cpp         # Implementação de Grafo
     ├── GrafoTests.cpp    # Implementação de GrafoTests
+    ├── Grupo.cpp         # Implementação de Grupo
     ├── main.cpp          # Ponto de entrada
     ├── Menu.cpp          # Implementação de Menu
     └── Vertice.cpp       # Implementação de Vertice

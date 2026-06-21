@@ -28,6 +28,9 @@ Grafo::~Grafo() {
    for(auto& par : vertices) {
     delete par.second;
    }
+
+   for(Grupo* g : grupos)
+        delete g;
 }
 
 void Grafo::addVertice(int id) {
@@ -42,14 +45,30 @@ void Grafo::removeVertice(int id) {
         return;
     }
 
+    //remove arestas deste vertice
     Vertice* vRemover = vertices[id];
     for (auto& par : vertices) {
         par.second->removeAresta(vRemover);
     }
-    delete vRemover;
+
+    //remove vertice do grupo
+    Grupo* g = getGrupo(vRemover->getGrupoId());
+    if (g != nullptr) {
+        vector<Vertice*>& verts = g->getListaVertices();
+
+        for (auto it = verts.begin(); it != verts.end(); ++it) {
+            if ((*it)->getId() == id) {
+                verts.erase(it);
+                break;
+            }
+        }
+    }
+
     vertices.erase(id);
+    delete vRemover;
     numVertices--;
 }
+
 void Grafo::addAresta(int origem, int destino, double peso) {
     if (verificarAdjacencia(origem, destino)) {
         return; 
@@ -261,4 +280,24 @@ Grafo* Grafo::primAGM(double* custo) {
     cout << "Custo total: " << custoTotal << endl;
 
     return agm;
+}
+
+void Grafo::addGrupo(int id) {
+    if(getGrupo(id) == nullptr) {
+        grupos.push_back(new Grupo(id));
+    }
+}
+
+Grupo* Grafo::getGrupo(int id) {
+    for(Grupo* g : grupos) {
+        if(g->getId() == id) {
+            return g;
+        }
+    }
+
+    return nullptr;
+}
+
+vector<Grupo*> Grafo::getGrupos() {
+    return grupos;
 }

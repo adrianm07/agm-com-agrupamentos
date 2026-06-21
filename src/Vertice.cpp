@@ -73,3 +73,11 @@ bool Vertice::temArestaPara(Vertice *v) {
 vector<Aresta> Vertice::getArestas() {
     return arestas;
 }
+
+void Vertice::setGrupoId(int grupoId) {
+    this->grupoId = grupoId;
+}
+
+int Vertice::getGrupoId() {
+    return grupoId;
+}
