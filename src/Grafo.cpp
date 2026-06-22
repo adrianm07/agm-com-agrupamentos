@@ -33,9 +33,16 @@ Grafo::~Grafo() {
         delete g;
 }
 
-void Grafo::addVertice(int id) {
+void Grafo::addVertice(int id, Grupo* grupo) {
     if (vertices.find(id) == vertices.end()) {
-        vertices[id] = new Vertice(id);
+        Vertice* v = new Vertice(id);
+
+        v->setGrupo(grupo);
+        if (grupo != nullptr) {
+            grupo->addVertice(v);
+        }
+
+        vertices[id] = v;
         numVertices++;
     }
 }
@@ -52,7 +59,7 @@ void Grafo::removeVertice(int id) {
     }
 
     //remove vertice do grupo
-    Grupo* g = getGrupo(vRemover->getGrupoId());
+    Grupo* g = vRemover->getGrupo();
     if (g != nullptr) {
         vector<Vertice*>& verts = g->getListaVertices();
 

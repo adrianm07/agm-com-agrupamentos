@@ -11,7 +11,7 @@ class Grafo {
 public:
     Grafo(bool orientado);
     ~Grafo();
-    void addVertice(int id);
+    void addVertice(int id, Grupo* grupo = nullptr);
     void removeVertice(int id);
     void addAresta(int origem, int destino, double peso = 1);
     void removeAresta(int origem, int destino);

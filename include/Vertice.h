@@ -4,7 +4,7 @@
 #include "Aresta.h"
 using namespace std;
 
-
+class Grupo;
 
 class Vertice {
 public:
@@ -20,14 +20,13 @@ public:
     int getGrau();
     int getId();
     vector<Aresta> getArestas();
-    int getGrupo();
 
-    void setGrupoId(int grupoId);
-    int getGrupoId();
+    void setGrupo(Grupo* grupo);
+    Grupo* getGrupo();
 
 private:
     int id;
-    int grupoId;
+    Grupo* grupo;
     
     vector<Aresta> arestas;
     //Para o prim e busca 

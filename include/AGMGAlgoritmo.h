@@ -12,13 +12,15 @@ class AGMGAlgoritmo {
 public:
     AGMGAlgoritmo(unsigned seed);
 
-    Grafo* gulosoRandomizado(Grafo& g, double alpha);
-    void buscaLocal(Grafo& g);
-
+    
 private:
     std::mt19937 rng;
+    
+    Grafo* gulosoRandomizado(Grafo& g, double alpha);
     Grafo* primRandomizado(Grafo& g, double alpha);
 
-};
+    void poda(Grafo& agm);
+    void buscaLocal(Grafo& agm, Grafo& original);
+};  
 
 #endif

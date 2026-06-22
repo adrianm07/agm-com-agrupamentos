@@ -29,6 +29,10 @@ Grafo* AGMGAlgoritmo::primRandomizado(Grafo& g, double alpha) {
   
   Grafo* agm = new Grafo(false);
 
+  for(Grupo* grupo : g.getGrupos()) {
+    agm->addGrupo(grupo->getId());
+  }
+  
   vector<ArestaAux> candidatos;
 
   const auto& vertices = g.getVertices();
@@ -40,7 +44,7 @@ Grafo* AGMGAlgoritmo::primRandomizado(Grafo& g, double alpha) {
   Vertice* vInicial = it->second;
   
   vInicial->setVisitado(true);
-  agm->addVertice(vInicial->getId());
+  agm->addVertice(vInicial->getId(), vInicial->getGrupo());
   
   //adiciona as arestas do vértice inicial na lista de candidatos
   for(Aresta& aresta : vInicial->getArestas()) {
@@ -95,6 +99,11 @@ Grafo* AGMGAlgoritmo::primRandomizado(Grafo& g, double alpha) {
     
     vDestino->setVisitado(true);
 
+    Vertice* vOrigem = g.getVertice(origem);
+
+    agm->addVertice(origem, vOrigem->getGrupo());
+    agm->addVertice(destino, vDestino->getGrupo());
+
     agm->addAresta(origem, destino, peso);
     arestasAdicionadas++;
 
@@ -114,4 +123,111 @@ Grafo* AGMGAlgoritmo::primRandomizado(Grafo& g, double alpha) {
   }
 
   return agm;
+}
+
+void AGMGAlgoritmo::poda(Grafo& agm) {
+  bool removeu;
+
+  do {
+    removeu = false;
+    
+    vector<int> verticesParaRemover;
+
+    for(auto& par : agm.getVertices()) {
+      Vertice* v = par.second;
+     
+      //só analisamos folhas
+      if(v->getGrau() != 1) {
+        continue;
+      }
+      
+      Grupo* grupo = v->getGrupo();
+
+      //só removemos vértices que pertencem a grupos com mais de um vértice
+      if(grupo->getQuantidadeVertices() == 1) {
+        continue;
+      }
+      
+      verticesParaRemover.push_back(v->getId());
+    }
+    
+    for(int id : verticesParaRemover) {
+      agm.removeVertice(id);
+      removeu = true;
+    }
+  } while(removeu);
+}
+
+void AGMGAlgoritmo::buscaLocal(Grafo& agm, Grafo& original) {
+  bool melhorou;
+
+  do {
+    melhorou = false;
+
+    vector<Vertice*> folhas;
+
+    //encontrar folhas que pertencem a grupos com apenas um vértice
+    for (auto& par : agm.getVertices()) {
+      Vertice* v = par.second;
+
+      if (v->getGrau() == 1 && v->getGrupo()->getQuantidadeVertices() == 1) {
+        folhas.push_back(v);
+      }
+    }
+
+    //tentar melhorar cada folha
+    for (Vertice* folha : folhas) {
+
+      Aresta a = folha->getArestas()[0];
+      Vertice* vizinhoAtual = a.getDestino();
+      int custoAtual = a.getPeso();
+
+      //remove temporariamente
+      agm.removeAresta(folha->getId(), vizinhoAtual->getId());
+
+      bool encontrouMelhoria = false;
+
+      //tenta novas conexões 
+      for (auto& par : agm.getVertices()) {
+        Vertice* vi = par.second;
+
+        if (vi->getId() == folha->getId()) continue;
+
+        Vertice* viOriginal = original.getVertice(vi->getId());
+
+        //percorre arestas de vi do GRAFO ORIGINAL até encontrar a primeira melhor conexao
+        for (Aresta& arestaOriginal : viOriginal->getArestas()) {
+
+          Vertice* destino = arestaOriginal.getDestino();
+
+          //queremos conexão com o GRUPO da folha
+          if (destino->getGrupo()->getId() != folha->getGrupo()->getId()) continue;
+
+          int custoNovo = arestaOriginal.getPeso();
+
+          //comparação simples de melhoria
+          if (custoNovo < custoAtual) {
+              agm.addAresta(folha->getId(), vi->getId(), custoNovo);
+
+              melhorou = true;
+              encontrouMelhoria = true;
+
+              break;
+          }
+        }
+
+        if (encontrouMelhoria) {
+          break;
+        }
+      }
+
+      
+      if (!encontrouMelhoria) {
+        agm.addAresta(folha->getId(), vizinhoAtual->getId(), custoAtual);
+      }
+    }
+
+    poda(agm);
+
+  } while (melhorou);
 }

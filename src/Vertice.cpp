@@ -1,10 +1,13 @@
 #include "Vertice.h"
+#include "Grupo.h"
+
 #include <iostream>
 
 // Construtor
 Vertice::Vertice(int id) {
     this->id = id;
     this->visitado = false;
+    this->grupo = nullptr;
 }
 
 
@@ -74,10 +77,10 @@ vector<Aresta> Vertice::getArestas() {
     return arestas;
 }
 
-void Vertice::setGrupoId(int grupoId) {
-    this->grupoId = grupoId;
+void Vertice::setGrupo(Grupo* grupo) {
+    this->grupo = grupo;
 }
 
-int Vertice::getGrupoId() {
-    return grupoId;
+Grupo* Vertice::getGrupo() {
+    return grupo;
 }
