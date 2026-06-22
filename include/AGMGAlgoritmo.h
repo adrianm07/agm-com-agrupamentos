@@ -11,7 +11,7 @@ using std::mt19937;
 class AGMGAlgoritmo {
 public:
     AGMGAlgoritmo(unsigned seed);
-
+    Grafo* grasp(Grafo& original, double alpha, int iteracoes);
     
 private:
     std::mt19937 rng;

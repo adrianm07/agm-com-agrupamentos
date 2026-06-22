@@ -16,6 +16,44 @@ struct ArestaAux {
     }
 };
 
+Grafo* AGMGAlgoritmo::grasp(Grafo& original, double alpha, int iteracoes) {
+    Grafo* melhorGlobal = nullptr;
+    double melhorCustoGlobal = std::numeric_limits<double>::max();
+
+    for (int i = 0; i < iteracoes; i++) {
+      //poda ja acontece aqui
+      Grafo* solucaoInicial = gulosoRandomizado(original, alpha);
+
+      buscaLocal(*solucaoInicial, original);
+
+      double custo = solucaoInicial->getCusto();
+
+      //atualiza melhor solução global
+      if (custo < melhorCustoGlobal) {
+        delete melhorGlobal;
+
+        melhorCustoGlobal = custo;
+        melhorGlobal = solucaoInicial;
+
+        solucaoInicial = nullptr;
+      } 
+      
+      if(solucaoInicial != nullptr) {
+        delete solucaoInicial;
+      }
+    }
+
+    return melhorGlobal;
+}
+
+Grafo* AGMGAlgoritmo::gulosoRandomizado(Grafo& g, double alpha) {
+    Grafo* agm = primRandomizado(g, alpha);
+
+    poda(*agm);
+
+    return agm;
+}
+
 Grafo* AGMGAlgoritmo::primRandomizado(Grafo& g, double alpha) {
   if(alpha < 0.0 || alpha > 1.0) {
     throw invalid_argument(

@@ -326,3 +326,30 @@ Vertice* Grafo::getVertice(int id) {
 int Grafo::getNumVertices() {
     return numVertices;
 }
+
+double Grafo::getCusto() {
+    double custoTotal = 0.0;
+
+    std::set<std::pair<int,int>> visitadas;
+
+    for (auto& par : vertices) {
+        Vertice* vertice = par.second;
+
+        for (Aresta& aresta : vertice->getArestas()) {
+
+            int vId = vertice->getId();
+            int vizinhoId = aresta.getDestino()->getId();
+
+            //evita contar aresta duas vezes
+            std::pair<int,int> arestaPair = std::minmax(vId, vizinhoId);
+
+            //procura aresta no visitadas se não encontrar soma o peso
+            if (visitadas.find(arestaPair) == visitadas.end()) {
+                visitadas.insert(arestaPair);
+                custoTotal += aresta.getPeso();
+            }
+        }
+    }
+
+    return custoTotal;
+}

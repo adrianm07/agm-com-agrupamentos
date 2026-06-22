@@ -2,8 +2,11 @@
 #define GRAFO_H
 #include "Vertice.h"
 #include "Grupo.h"
+#include <algorithm>
+#include <utility>
 #include <map>
 #include <vector>
+#include <set>
 
 using namespace std;
 
@@ -24,6 +27,7 @@ public:
     vector<int> listarVizinhos(int id);
     Grafo* primAGM(double *custo);
     bool isPonderado();
+    double getCusto();
 
     void addGrupo(int id);
     Grupo* getGrupo(int id);
