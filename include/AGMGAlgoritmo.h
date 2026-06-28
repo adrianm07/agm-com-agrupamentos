@@ -16,6 +16,7 @@ public:
 private:
     std::mt19937 rng;
     
+    Grafo *primGuloso(Grafo& grafo, const vector<Grupo*>& grupos, double *custo);
     Grafo* gulosoRandomizado(Grafo& g, double alpha);
     Grafo* primRandomizado(Grafo& g, double alpha);
 

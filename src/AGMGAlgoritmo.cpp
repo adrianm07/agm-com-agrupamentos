@@ -1,6 +1,9 @@
 #include "AGMGAlgoritmo.h"
 #include "Vertice.h"
+#include <iostream>
 #include <algorithm>
+#include <unordered_set>
+#include <queue>
 
 using namespace std;
 
@@ -268,4 +271,107 @@ void AGMGAlgoritmo::buscaLocal(Grafo& agm, Grafo& original) {
     poda(agm);
 
   } while (melhorou);
+}
+
+Grafo *AGMGAlgoritmo::primGuloso(Grafo& grafo, const vector<Grupo*>& grupos, double *custo){
+  
+  if(grafo.getVertices().empty()){
+    throw std::invalid_argument("Erro: O grafo esta vazio");
+  }
+
+  for(auto& par : grafo.getVertices()){
+    par.second->setVisitado(false); // seta todos os vertice como não visitados antes de iniciar a execução
+  }
+
+  Grafo* agm = new Grafo(false); // cria um grafo nao orientado
+
+  int totalGrupos = grupos.size();
+  unordered_set<int> gruposVisitados;
+  priority_queue<ArestaAux, vector<ArestaAux>, greater<ArestaAux>> filaPrioridade; // cria uma fila de ArestaAux e que é um Min-Heap(usando o greater e o operator>)
+
+  Vertice* vInicial = grafo.getVertices().begin()->second; // define o vertice inicial como o primeiro vertice do mapa
+  int idInicial = vInicial->getId();
+
+  vInicial->setVisitado(true); // marca ele como visitado
+  agm->addVertice(idInicial); // e adiciona ele na árvore
+  if(agm->getVertices().count(idInicial)){
+    agm->getVertices()[idInicial]->setGrupo(vInicial->getGrupo());
+  }
+
+  if(vInicial->getGrupo() != nullptr){
+    gruposVisitados.insert(vInicial->getGrupo()->getId());
+  }
+
+  for(Aresta& aresta : vInicial->getArestas()){
+    filaPrioridade.push({idInicial, aresta.getDestino()->getId(), aresta.getPeso()}); // adiciona as arestas do vértice inicial na fila
+  }
+
+  double custoTotal = 0;
+
+  while(!filaPrioridade.empty() && gruposVisitados.size() < totalGrupos){
+    
+    ArestaAux arestaAtual = filaPrioridade.top(); // pega a do topo da heap
+    filaPrioridade.pop(); // remove a aresta do topo da heap
+
+    int origem = arestaAtual.origem;
+    int destino = arestaAtual.destino;
+    double peso = arestaAtual.peso;
+
+    Vertice* vOrigem = grafo.getVertices()[origem];
+    Vertice* vDestino = grafo.getVertices()[destino];
+
+    if(vDestino->getVisitado()){
+      continue; // se sim, proxima iteração
+    }
+
+    vDestino -> setVisitado(true);
+
+    agm->addVertice(origem);
+    agm->addVertice(destino);
+
+    agm->getVertices()[origem]->setGrupo(vOrigem->getGrupo());
+    agm->getVertices()[destino]->setGrupo(vDestino->getGrupo());
+
+    agm->addAresta(origem, destino, peso);
+    custoTotal += peso;
+
+    if(vDestino->getGrupo() != nullptr){
+      gruposVisitados.insert(vDestino->getGrupo()->getId());
+    }
+
+    for(Aresta& aresta : vDestino->getArestas()){ // pra cada aresta do proximo nó, adiciona na fila e o processo continua
+      if(!aresta.getDestino()->getVisitado()){
+        filaPrioridade.push({destino, aresta.getDestino()->getId(), aresta.getPeso()});
+      }
+    }
+
+  }
+
+  if(gruposVisitados.size() < totalGrupos){
+      cout << "Aviso: Nao foi possivel alcancar todos os grupos" << endl;
+  }
+
+  cout << "Custo pré-poda:" << custoTotal << endl;
+
+  poda(*agm);
+
+  double custoPosPoda = 0;
+
+  for(auto& par : agm->getVertices()){
+    for(Aresta& aresta : par.second->getArestas()){
+      custoPosPoda += aresta.getPeso();
+    }
+  }
+
+  custoTotal = custoPosPoda / 2.0;
+
+  if(custo != nullptr){
+    *custo = custoTotal;
+  }
+
+  cout << " --- Execucao do Algoritmo de Prim-Guloso ---" << endl;
+  cout << "Custo total: " << custoTotal << endl;
+
+  return agm;
+
 }
