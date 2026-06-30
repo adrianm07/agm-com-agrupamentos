@@ -40,6 +40,8 @@ void Grafo::addVertice(int id, Grupo* grupo) {
         v->setGrupo(grupo);
         if (grupo != nullptr) {
             grupo->addVertice(v);
+            // registra que este grupo já tem representante na árvore
+            gruposPresentes.insert(grupo->getId());
         }
 
         vertices[id] = v;
@@ -293,6 +295,15 @@ void Grafo::addGrupo(int id) {
     if(getGrupo(id) == nullptr) {
         grupos.push_back(new Grupo(id));
     }
+}
+
+int Grafo::getNumGrupos() {
+    return (int)grupos.size();
+}
+
+bool Grafo::todosGruposPresentes() const {
+    // verdadeiro quando cada grupo cadastrado tem ao menos 1 vértice inserido
+    return (int)gruposPresentes.size() >= (int)grupos.size() && !grupos.empty();
 }
 
 Grupo* Grafo::getGrupo(int id) {
