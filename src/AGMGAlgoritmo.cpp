@@ -2,8 +2,9 @@
 #include "Vertice.h"
 #include <iostream>
 #include <algorithm>
-#include <unordered_set>
+#include <limits>
 #include <queue>
+
 
 using namespace std;
 
@@ -19,359 +20,258 @@ struct ArestaAux {
     }
 };
 
-Grafo* AGMGAlgoritmo::grasp(Grafo& original, double alpha, int iteracoes) {
-    Grafo* melhorGlobal = nullptr;
-    double melhorCustoGlobal = std::numeric_limits<double>::max();
-
-    for (int i = 0; i < iteracoes; i++) {
-      //poda ja acontece aqui
-      Grafo* solucaoInicial = gulosoRandomizado(original, alpha);
-
-      buscaLocal(*solucaoInicial, original);
-
-      double custo = solucaoInicial->getCusto();
-
-      //atualiza melhor solução global
-      if (custo < melhorCustoGlobal) {
-        delete melhorGlobal;
-
-        melhorCustoGlobal = custo;
-        melhorGlobal = solucaoInicial;
-
-        solucaoInicial = nullptr;
-      } 
-      
-      if(solucaoInicial != nullptr) {
-        delete solucaoInicial;
-      }
-    }
-
-    return melhorGlobal;
+// Heurística: primModificado + poda
+Grafo* AGMGAlgoritmo::heuristica(Grafo& g, double alpha) {
+    Grafo* agm = primModificado(g, alpha);
+    poda(*agm);
+    return agm;
 }
 
-Grafo* AGMGAlgoritmo::gulosoRandomizado(Grafo& g, double alpha) {
-    Grafo* agm = primRandomizado(g, alpha);
 
-    poda(*agm);
+// Guloso puro (alpha = 0): sempre escolhe a aresta de menor peso
+Grafo* AGMGAlgoritmo::guloso(Grafo& g) {
+    return heuristica(g, 0.0);
+}
+
+// Guloso Randomizado: repete 'iteracoes' vezes com alpha fixo,
+// retorna a solução de menor custo encontrada
+Grafo* AGMGAlgoritmo::gulosoRandomizado(Grafo& g, double alpha, int iteracoes) {
+    Grafo* melhor = nullptr;
+    double melhorCusto = std::numeric_limits<double>::max();
+
+    for(int i = 0; i < iteracoes; i++) {
+        Grafo* candidato = heuristica(g, alpha);
+        double custo = candidato->getCusto();
+
+        if(custo < melhorCusto) {
+            delete melhor;
+            melhor = candidato;
+            melhorCusto = custo;
+        } else {
+            delete candidato;
+        }
+    }
+
+    return melhor;
+}
+
+// Guloso Reativo: ajusta dinamicamente as probabilidades de cada alpha
+// com base na qualidade relativa das soluções obtidas por cada um.
+// A cada bloco de iterações (frequência de atualização = max(1, iteracoes/10)),
+// recalcula P(alpha_i) ∝ melhorGlobal / mediaCusto(alpha_i)
+// alphas que produzem soluções mais próximas do melhor global ganham
+// maior probabilidade de ser escolhidos nas próximas iterações.
+Grafo* AGMGAlgoritmo::gulosoReativo(Grafo& g, const vector<double>& alphas, int iteracoes) {
+    int n = (int)alphas.size();
+    if(n == 0) throw invalid_argument("Lista de alphas vazia");
+
+    // probabilidade uniforme inicial
+    vector<double> prob(n, 1.0 / n);
+    // acumuladores por alpha: soma dos custos e contagem de soluções
+    vector<double> somaCustos(n, 0.0);
+    vector<int>    contagem(n, 0);
+
+    Grafo* melhor = nullptr;
+    double melhorCusto = std::numeric_limits<double>::max();
+
+    // frequência de atualização das probabilidades
+    int freqAtualizacao = max(1, iteracoes / 10);
+
+    uniform_real_distribution<double> dist01(0.0, 1.0);
+
+    for(int it = 0; it < iteracoes; it++) {
+
+        // seleciona alpha pela roleta (distribuição acumulada)
+        double r = dist01(rng);
+        double acum = 0.0;
+        int idx = n - 1;
+        for(int k = 0; k < n; k++) {
+            acum += prob[k];
+            if(r <= acum) { idx = k; break; }
+        }
+
+        Grafo* candidato = heuristica(g, alphas[idx]);
+        double custo = candidato->getCusto();
+
+        // atualiza acumuladores do alpha escolhido
+        somaCustos[idx] += custo;
+        contagem[idx]++;
+
+        // atualiza melhor solução global
+        if(custo < melhorCusto) {
+            delete melhor;
+            melhor = candidato;
+            melhorCusto = custo;
+        } else {
+            delete candidato;
+        }
+
+        // atualiza probabilidades periodicamente
+        if((it + 1) % freqAtualizacao == 0 && melhorCusto > 0.0) {
+            double somaQ = 0.0;
+            vector<double> q(n);
+
+            for(int k = 0; k < n; k++) {
+                if(contagem[k] > 0) {
+                    // q[k] ∝ melhorGlobal / mediaCusto(k) -> alphas melhores têm q maior
+                    q[k] = melhorCusto / (somaCustos[k] / contagem[k]);
+                } else {
+                    q[k] = 1.0; // alpha ainda não usado: mantém peso neutro
+                }
+                somaQ += q[k];
+            }
+
+            for(int k = 0; k < n; k++) {
+                prob[k] = q[k] / somaQ;
+            }
+        }
+    }
+
+    return melhor;
+}
+
+
+
+// Prim Modificado
+// Condição de parada: todos os grupos do grafo original cobertos
+// alpha = 0.0 -> guloso puro (LRC = só a aresta mínima, vértice inicial fixo)
+// 0 < alpha < 1 -> guloso randomizado (LRC restrita, vértice inicial aleatório)
+Grafo* AGMGAlgoritmo::primModificado(Grafo& g, double alpha) {
+    if(alpha < 0.0 || alpha > 1.0) {
+        throw invalid_argument("Alpha deve estar entre 0 e 1");
+    }
+
+    // reseta flags de visita
+    for(auto& par : g.getVertices()) {
+        par.second->setVisitado(false);
+    }
+
+    // cria AGM vazia e copia os grupos do grafo original
+    Grafo* agm = new Grafo(false);
+    for(Grupo* grupo : g.getGrupos()) {
+        agm->addGrupo(grupo->getId());
+    }
+
+    int totalGrupos = g.getNumGrupos();
+
+    vector<ArestaAux> candidatos;
+
+    // vértice inicial: sempre o primeiro do mapa
+    const auto& vertices = g.getVertices();
+    auto it = vertices.begin();
+
+    Vertice* vInicial = it->second;
+    vInicial->setVisitado(true);
+
+    // addVertice já registra o grupo em agm->gruposPresentes
+    Grupo* grupoInicial = g.getGrupo(vInicial->getGrupo() ? vInicial->getGrupo()->getId() : -1);
+    agm->addVertice(vInicial->getId(), grupoInicial);
+
+    for(Aresta& aresta : vInicial->getArestas()) {
+        candidatos.push_back({vInicial->getId(), aresta.getDestino()->getId(), aresta.getPeso()});
+    }
+
+    // ── loop principal ──────────────────────────────────────────────────────
+    while(!candidatos.empty() && !agm->todosGruposPresentes()) {
+
+        // calcula menor e maior peso entre os candidatos
+        double menorPeso = candidatos[0].peso;
+        double maiorPeso = candidatos[0].peso;
+        for(const ArestaAux& a : candidatos) {
+            if(a.peso < menorPeso) menorPeso = a.peso;
+            if(a.peso > maiorPeso) maiorPeso = a.peso;
+        }
+
+        // limite da LRC:
+        //   alpha=0 -> limite=menorPeso -> só a(s) aresta(s) mínima(s)
+        //   alpha=1 -> limite=maiorPeso -> todas as arestas
+        double limite = menorPeso + alpha * (maiorPeso - menorPeso);
+
+        // monta a Lista Restrita de Candidatos
+        vector<ArestaAux> lrc;
+        for(const ArestaAux& a : candidatos) {
+            if(a.peso <= limite) {
+                lrc.push_back(a);
+            }
+        }
+
+        // seleciona aresta da LRC
+        uniform_int_distribution<int> distLRC(0, (int)lrc.size() - 1);
+        ArestaAux arestaSelecionada = lrc[distLRC(rng)];
+
+        int origem  = arestaSelecionada.origem;
+        int destino = arestaSelecionada.destino;
+        double peso = arestaSelecionada.peso;
+
+        Vertice* vDestino = g.getVertice(destino);
+
+        // remove aresta da lista de candidatos (válida ou não)
+        candidatos.erase(
+            remove_if(candidatos.begin(), candidatos.end(),
+                [&origem, &destino](const ArestaAux& a) {
+                    return a.origem == origem && a.destino == destino;
+                }),
+            candidatos.end()
+        );
+
+        if(vDestino->getVisitado()) {
+            continue; // vértice já na árvore, descarta
+        }
+
+        vDestino->setVisitado(true);
+
+        // resolve o Grupo* dentro do AGM (grupos foram copiados por addGrupo)
+        Vertice* vOrigem  = g.getVertice(origem);
+        Grupo* gOrigem  = vOrigem->getGrupo()  ? agm->getGrupo(vOrigem->getGrupo()->getId())  : nullptr;
+        Grupo* gDestino = vDestino->getGrupo() ? agm->getGrupo(vDestino->getGrupo()->getId()) : nullptr;
+
+        // addVertice registra o grupo em agm->gruposPresentes automaticamente
+        agm->addVertice(origem,  gOrigem);
+        agm->addVertice(destino, gDestino);
+        agm->addAresta(origem, destino, peso);
+
+        // expande candidatos com arestas do novo vértice
+        for(Aresta& aresta : vDestino->getArestas()) {
+            if(!aresta.getDestino()->getVisitado()) {
+                candidatos.push_back({vDestino->getId(), aresta.getDestino()->getId(), aresta.getPeso()});
+            }
+        }
+    }
 
     return agm;
 }
 
-Grafo* AGMGAlgoritmo::primRandomizado(Grafo& g, double alpha) {
-  if(alpha < 0.0 || alpha > 1.0) {
-    throw invalid_argument(
-        "Alpha deve estar entre 0 e 1"
-    );
-  }
-
-  for(auto& par : g.getVertices()) {
-    par.second->setVisitado(false);
-  }
-  
-  Grafo* agm = new Grafo(false);
-
-  for(Grupo* grupo : g.getGrupos()) {
-    agm->addGrupo(grupo->getId());
-  }
-  
-  vector<ArestaAux> candidatos;
-
-  const auto& vertices = g.getVertices();
-  auto it = vertices.begin();
-    
-  uniform_int_distribution<int> distInicial(0, vertices.size() - 1);
-  //escolhe um vértice aleatório "andando" com o iterador
-  advance(it, distInicial(rng));
-  Vertice* vInicial = it->second;
-  
-  vInicial->setVisitado(true);
-  agm->addVertice(vInicial->getId(), vInicial->getGrupo());
-  
-  //adiciona as arestas do vértice inicial na lista de candidatos
-  for(Aresta& aresta : vInicial->getArestas()) {
-    candidatos.push_back({vInicial->getId(), aresta.getDestino()->getId(), aresta.getPeso()});
-  }
-
-  int arestasAdicionadas = 0;
-
-  while(!candidatos.empty() && arestasAdicionadas < g.getNumVertices() - 1) {
-    double menorPeso = candidatos[0].peso;
-    double maiorPeso = candidatos[0].peso;
-
-    for(const ArestaAux& a : candidatos) {
-      if(a.peso < menorPeso)
-          menorPeso = a.peso;
-
-      if(a.peso > maiorPeso)
-          maiorPeso = a.peso;
-    }
-
-    double limite = menorPeso + alpha * (maiorPeso - menorPeso);
-
-    //cria lista restrita de candidatos com arestas de pesos menores ou iguais ao limite
-    vector<ArestaAux> lrc;
-    for(const ArestaAux& a : candidatos) {
-      if(a.peso <= limite) {
-          lrc.push_back(a);
-      }
-    }
-
-    //seleciona aresta aleatória da lista restrita
-    uniform_int_distribution<int> distLRC(0, lrc.size() - 1);
-    int indiceAleatorio = distLRC(rng);
-    ArestaAux arestaSelecionada = lrc[indiceAleatorio];
-
-    int origem = arestaSelecionada.origem;
-    int destino = arestaSelecionada.destino;
-    double peso = arestaSelecionada.peso;
-    
-    Vertice* vDestino = g.getVertice(destino);
-
-    if(vDestino->getVisitado()) {
-      //remove a aresta selecionadada da lista de candidatos
-      candidatos.erase(remove_if(candidatos.begin(), candidatos.end(),
-        [&origem, &destino](const ArestaAux& a) {
-          return a.origem == origem && a.destino == destino;
-        }),
-        candidatos.end());
-
-      continue;
-    }
-    
-    vDestino->setVisitado(true);
-
-    Vertice* vOrigem = g.getVertice(origem);
-
-    agm->addVertice(origem, vOrigem->getGrupo());
-    agm->addVertice(destino, vDestino->getGrupo());
-
-    agm->addAresta(origem, destino, peso);
-    arestasAdicionadas++;
-
-    //remove a aresta selecionada da lista de candidatos
-    candidatos.erase(remove_if(candidatos.begin(), candidatos.end(),
-      [&origem, &destino](const ArestaAux& a) {
-        return a.origem == origem && a.destino == destino;
-      }),
-      candidatos.end());
-
-    //adiciona as arestas do vértice destino na lista de candidatos
-    for(Aresta& aresta : vDestino->getArestas()) {
-      if(!aresta.getDestino()->getVisitado()) {
-        candidatos.push_back({vDestino->getId(), aresta.getDestino()->getId(), aresta.getPeso()});
-      }
-    }
-  }
-
-  return agm;
-}
-
+// Poda -> Remove iterativamente folhas cujo grupo já tem outro representante na árvore
 void AGMGAlgoritmo::poda(Grafo& agm) {
-  bool removeu;
+    bool removeu;
 
-  do {
-    removeu = false;
-    
-    vector<int> verticesParaRemover;
+    do {
+        removeu = false;
 
-    for(auto& par : agm.getVertices()) {
-      Vertice* v = par.second;
-     
-      //só analisamos folhas
-      if(v->getGrau() != 1) {
-        continue;
-      }
-      
-      Grupo* grupo = v->getGrupo();
+        vector<int> verticesParaRemover;
 
-      //só removemos vértices que pertencem a grupos com mais de um vértice
-      if(grupo->getQuantidadeVertices() == 1) {
-        continue;
-      }
-      
-      verticesParaRemover.push_back(v->getId());
-    }
-    
-    for(int id : verticesParaRemover) {
-      agm.removeVertice(id);
-      removeu = true;
-    }
-  } while(removeu);
-}
+        for(auto& par : agm.getVertices()) {
+            Vertice* v = par.second;
 
-void AGMGAlgoritmo::buscaLocal(Grafo& agm, Grafo& original) {
-  bool melhorou;
+            // só analisamos folhas
+            if(v->getGrau() != 1) {
+                continue;
+            }
 
-  do {
-    melhorou = false;
+            Grupo* grupo = v->getGrupo();
 
-    vector<Vertice*> folhas;
+            // só removemos vértices cujo grupo tem mais de 1 representante
+            if(grupo == nullptr || grupo->getQuantidadeVertices() == 1) {
+                continue;
+            }
 
-    //encontrar folhas que pertencem a grupos com apenas um vértice
-    for (auto& par : agm.getVertices()) {
-      Vertice* v = par.second;
-
-      if (v->getGrau() == 1 && v->getGrupo()->getQuantidadeVertices() == 1) {
-        folhas.push_back(v);
-      }
-    }
-
-    //tentar melhorar cada folha
-    for (Vertice* folha : folhas) {
-
-      Aresta a = folha->getArestas()[0];
-      Vertice* vizinhoAtual = a.getDestino();
-      int custoAtual = a.getPeso();
-
-      //remove temporariamente
-      agm.removeAresta(folha->getId(), vizinhoAtual->getId());
-
-      bool encontrouMelhoria = false;
-
-      //tenta novas conexões 
-      for (auto& par : agm.getVertices()) {
-        Vertice* vi = par.second;
-
-        if (vi->getId() == folha->getId()) continue;
-
-        Vertice* viOriginal = original.getVertice(vi->getId());
-
-        //percorre arestas de vi do GRAFO ORIGINAL até encontrar a primeira melhor conexao
-        for (Aresta& arestaOriginal : viOriginal->getArestas()) {
-
-          Vertice* destino = arestaOriginal.getDestino();
-
-          //queremos conexão com o GRUPO da folha
-          if (destino->getGrupo()->getId() != folha->getGrupo()->getId()) continue;
-
-          int custoNovo = arestaOriginal.getPeso();
-
-          //comparação simples de melhoria
-          if (custoNovo < custoAtual) {
-              agm.addAresta(folha->getId(), vi->getId(), custoNovo);
-
-              melhorou = true;
-              encontrouMelhoria = true;
-
-              break;
-          }
+            verticesParaRemover.push_back(v->getId());
         }
 
-        if (encontrouMelhoria) {
-          break;
+        for(int id : verticesParaRemover) {
+            agm.removeVertice(id);
+            removeu = true;
         }
-      }
 
-      
-      if (!encontrouMelhoria) {
-        agm.addAresta(folha->getId(), vizinhoAtual->getId(), custoAtual);
-      }
-    }
-
-    poda(agm);
-
-  } while (melhorou);
-}
-
-Grafo *AGMGAlgoritmo::primGuloso(Grafo& grafo, const vector<Grupo*>& grupos, double *custo){
-  
-  if(grafo.getVertices().empty()){
-    throw std::invalid_argument("Erro: O grafo esta vazio");
-  }
-
-  for(auto& par : grafo.getVertices()){
-    par.second->setVisitado(false); // seta todos os vertice como não visitados antes de iniciar a execução
-  }
-
-  Grafo* agm = new Grafo(false); // cria um grafo nao orientado
-
-  int totalGrupos = grupos.size();
-  unordered_set<int> gruposVisitados;
-  priority_queue<ArestaAux, vector<ArestaAux>, greater<ArestaAux>> filaPrioridade; // cria uma fila de ArestaAux e que é um Min-Heap(usando o greater e o operator>)
-
-  Vertice* vInicial = grafo.getVertices().begin()->second; // define o vertice inicial como o primeiro vertice do mapa
-  int idInicial = vInicial->getId();
-
-  vInicial->setVisitado(true); // marca ele como visitado
-  agm->addVertice(idInicial); // e adiciona ele na árvore
-  if(agm->getVertices().count(idInicial)){
-    agm->getVertices()[idInicial]->setGrupo(vInicial->getGrupo());
-  }
-
-  if(vInicial->getGrupo() != nullptr){
-    gruposVisitados.insert(vInicial->getGrupo()->getId());
-  }
-
-  for(Aresta& aresta : vInicial->getArestas()){
-    filaPrioridade.push({idInicial, aresta.getDestino()->getId(), aresta.getPeso()}); // adiciona as arestas do vértice inicial na fila
-  }
-
-  double custoTotal = 0;
-
-  while(!filaPrioridade.empty() && gruposVisitados.size() < totalGrupos){
-    
-    ArestaAux arestaAtual = filaPrioridade.top(); // pega a do topo da heap
-    filaPrioridade.pop(); // remove a aresta do topo da heap
-
-    int origem = arestaAtual.origem;
-    int destino = arestaAtual.destino;
-    double peso = arestaAtual.peso;
-
-    Vertice* vOrigem = grafo.getVertices()[origem];
-    Vertice* vDestino = grafo.getVertices()[destino];
-
-    if(vDestino->getVisitado()){
-      continue; // se sim, proxima iteração
-    }
-
-    vDestino -> setVisitado(true);
-
-    agm->addVertice(origem);
-    agm->addVertice(destino);
-
-    agm->getVertices()[origem]->setGrupo(vOrigem->getGrupo());
-    agm->getVertices()[destino]->setGrupo(vDestino->getGrupo());
-
-    agm->addAresta(origem, destino, peso);
-    custoTotal += peso;
-
-    if(vDestino->getGrupo() != nullptr){
-      gruposVisitados.insert(vDestino->getGrupo()->getId());
-    }
-
-    for(Aresta& aresta : vDestino->getArestas()){ // pra cada aresta do proximo nó, adiciona na fila e o processo continua
-      if(!aresta.getDestino()->getVisitado()){
-        filaPrioridade.push({destino, aresta.getDestino()->getId(), aresta.getPeso()});
-      }
-    }
-
-  }
-
-  if(gruposVisitados.size() < totalGrupos){
-      cout << "Aviso: Nao foi possivel alcancar todos os grupos" << endl;
-  }
-
-  cout << "Custo pré-poda:" << custoTotal << endl;
-
-  poda(*agm);
-
-  double custoPosPoda = 0;
-
-  for(auto& par : agm->getVertices()){
-    for(Aresta& aresta : par.second->getArestas()){
-      custoPosPoda += aresta.getPeso();
-    }
-  }
-
-  custoTotal = custoPosPoda / 2.0;
-
-  if(custo != nullptr){
-    *custo = custoTotal;
-  }
-
-  cout << " --- Execucao do Algoritmo de Prim-Guloso ---" << endl;
-  cout << "Custo total: " << custoTotal << endl;
-
-  return agm;
-
+    } while(removeu);
 }

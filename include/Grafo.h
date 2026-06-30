@@ -7,6 +7,8 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <unordered_set>
+
 
 using namespace std;
 
@@ -32,6 +34,9 @@ public:
     void addGrupo(int id);
     Grupo* getGrupo(int id);
     vector<Grupo*> getGrupos();
+    int getNumGrupos();
+    bool todosGruposPresentes() const;
+
     
     map<int, Vertice*>& getVertices();
     Vertice* getVertice(int id);
@@ -41,7 +46,9 @@ private:
     bool orientado;  
     map<int, Vertice*> vertices; 
     vector<Grupo*> grupos;
+    unordered_set<int> gruposPresentes; // grupos que já têm ao menos 1 vértice na árvore
     int numVertices;
+
 };
 
 #endif

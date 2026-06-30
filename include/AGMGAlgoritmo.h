@@ -11,17 +11,23 @@ using std::mt19937;
 class AGMGAlgoritmo {
 public:
     AGMGAlgoritmo(unsigned seed);
-    Grafo* grasp(Grafo& original, double alpha, int iteracoes);
-    
+
+    // Retorna a melhor AGM com agrupamentos encontrada
+    Grafo* guloso(Grafo& g);
+
+    // Repete 'iteracoes' vezes com alpha fixo e retorna a melhor solução
+    Grafo* gulosoRandomizado(Grafo& g, double alpha, int iteracoes);
+
+    // Adapta as probabilidades dos alphas a cada iteração com base na qualidade
+    Grafo* gulosoReativo(Grafo& g, const vector<double>& alphas, int iteracoes);
+
 private:
     std::mt19937 rng;
-    
-    Grafo *primGuloso(Grafo& grafo, const vector<Grupo*>& grupos, double *custo);
-    Grafo* gulosoRandomizado(Grafo& g, double alpha);
-    Grafo* primRandomizado(Grafo& g, double alpha);
 
+    Grafo* heuristica(Grafo& g, double alpha); // primModificado + poda
+    Grafo* primModificado(Grafo& g, double alpha);
     void poda(Grafo& agm);
-    void buscaLocal(Grafo& agm, Grafo& original);
-};  
+};
+
 
 #endif
