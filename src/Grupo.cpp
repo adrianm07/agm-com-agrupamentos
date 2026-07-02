@@ -13,7 +13,7 @@ int Grupo::getId() {
 
 void Grupo::addVertice(Vertice* v) {
   vertices.push_back(v);
-  v->setGrupo(this);
+  v->addGrupo(this);
 }
 
 vector<Vertice*>& Grupo::getListaVertices() {

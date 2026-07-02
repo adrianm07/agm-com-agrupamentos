@@ -37,8 +37,8 @@ void Grafo::addVertice(int id, Grupo* grupo) {
     if (vertices.find(id) == vertices.end()) {
         Vertice* v = new Vertice(id);
 
-        v->setGrupo(grupo);
         if (grupo != nullptr) {
+            v->addGrupo(grupo);
             grupo->addVertice(v);
             // registra que este grupo já tem representante na árvore
             gruposPresentes.insert(grupo->getId());
@@ -54,25 +54,28 @@ void Grafo::removeVertice(int id) {
         return;
     }
 
-    //remove arestas deste vertice
     Vertice* vRemover = vertices[id];
+
     for (auto& par : vertices) {
         par.second->removeAresta(vRemover);
     }
 
-    //remove vertice do grupo
-    Grupo* g = vRemover->getGrupo();
-    if (g != nullptr) {
-        vector<Vertice*>& verts = g->getListaVertices();
+    vector<Grupo*> gruposDoVertice = vRemover->getGrupos(); 
 
-        for (auto it = verts.begin(); it != verts.end(); ++it) {
-            if ((*it)->getId() == id) {
-                verts.erase(it);
-                break;
+    for (Grupo* g : gruposDoVertice) {
+        if (g != nullptr) {
+            vector<Vertice*>& verts = g->getListaVertices();
+
+            for (auto it = verts.begin(); it != verts.end(); ++it) {
+                if ((*it)->getId() == id) {
+                    verts.erase(it);
+                    break; 
+                }
             }
         }
     }
 
+    // 3. Limpa o vértice do mapa principal do grafo e desaloca a memória
     vertices.erase(id);
     delete vRemover;
     numVertices--;
@@ -134,43 +137,62 @@ void Grafo::imprimirGrafo() {
 
 void Grafo::lerArquivo(const string& nomeArquivo) {
     ifstream arquivo(nomeArquivo);
-    string linha;
-
+    
     if (!arquivo.is_open()) {
-        throw std::runtime_error("Erro ao abrir o arquivo: " + nomeArquivo);
+        cerr << "Erro ao abrir o arquivo: " << nomeArquivo << endl;
+        return;
+    }
+
+    string linha;
+    
+    int n, m, k;
+    if (getline(arquivo, linha)) {
+        stringstream ss(linha);
+        ss >> n >> m >> k;
+        
+        for (int i = 0; i < k; ++i) {
+            this->addGrupo(i);
+        }
     }
 
     while (getline(arquivo, linha)) {
-        if (linha.empty()) continue;
+        if (linha.empty()) continue; 
+        
+        if (linha == "ARESTAS" || linha.rfind("ARESTAS", 0) == 0) {
+            break;
+        }
 
         stringstream ss(linha);
-        int origem, destino;
-        double peso = 1.0;
+        int idVertice;
+        ss >> idVertice;
 
-        if(ss >> origem >> destino) {
-            if(!(ss >> peso)) {
-                peso = 1.0;
-            }
+        // Cria e adiciona o vértice na estrutura do Grafo
+        this->addVertice(idVertice);
+        Vertice* v = this->getVertice(idVertice);
 
-            addVertice(origem);
-            addVertice(destino);
-
-            addAresta(origem, destino, peso);
-
-        } else {
-            ss.clear();
-            ss.str(linha);
-
-            if(ss >> origem) {
-                addVertice(origem);
+        // Lê todos os grupos restantes da linha
+        int idGrupo;
+        while (ss >> idGrupo) {
+            Grupo* g = this->getGrupo(idGrupo);
+            
+            if (g != nullptr && v != nullptr) {
+                g->addVertice(v); 
+                v->addGrupo(g); 
             }
         }
     }
 
-    arquivo.close();
-    cout << "Arquivo importado com sucesso!" << endl;
+    int origem, destino;
+    double peso;
+    while (getline(arquivo, linha)) {
+        if (linha.empty()) continue;
+        
+        stringstream ss(linha);
+        if (ss >> origem >> destino >> peso) {
+            this->addAresta(origem, destino, peso);
+        }
+    }
 }
-
 
 int Grafo::getGrau(int id) {
     if (vertices.find(id) != vertices.end()) {

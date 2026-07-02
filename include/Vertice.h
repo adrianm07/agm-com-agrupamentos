@@ -21,12 +21,13 @@ public:
     int getId();
     vector<Aresta> getArestas();
 
-    void setGrupo(Grupo* grupo);
-    Grupo* getGrupo();
+    void addGrupo(Grupo* grupo);
+    vector<Grupo*>& getGrupos();
+    bool pertenceAoGrupo(int idGrupo);
 
 private:
     int id;
-    Grupo* grupo;
+    vector<Grupo*> grupos;
     
     vector<Aresta> arestas;
     //Para o prim e busca 

@@ -7,7 +7,6 @@
 Vertice::Vertice(int id) {
     this->id = id;
     this->visitado = false;
-    this->grupo = nullptr;
 }
 
 
@@ -77,10 +76,22 @@ vector<Aresta> Vertice::getArestas() {
     return arestas;
 }
 
-void Vertice::setGrupo(Grupo* grupo) {
-    this->grupo = grupo;
+void Vertice::addGrupo(Grupo* grupo) {
+    if(grupo != nullptr && !this->pertenceAoGrupo(grupo->getId())) {
+        this->grupos.push_back(grupo);
+    }
 }
 
-Grupo* Vertice::getGrupo() {
-    return grupo;
+vector<Grupo*>& Vertice::getGrupos() {
+    return this->grupos;
+}
+
+bool Vertice::pertenceAoGrupo(int idGrupo) {
+    for (Grupo* g : this->grupos) {
+        if (g->getId() == idGrupo) {
+            return true;
+        }
+    }
+
+    return false;
 }
